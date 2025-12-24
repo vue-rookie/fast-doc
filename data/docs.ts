@@ -9,45 +9,53 @@ export const docsData: DocItem[] = [
   },
   {
     id: 'basics',
-    title: '基础知识',
-    type: 'category',
-    children: [
-      { id: 'auth', title: '鉴权指南', type: 'doc', filePath: 'docs/auth.md' },
-      { id: 'errors', title: '错误代码', type: 'doc', content: '# 错误代码\n\n此处为直接编写的内容示例，未链接文件。' },
-      { id: 'rate-limits', title: '频率限制', type: 'doc', content: '# 频率限制\n\n请勿超过每分钟 600 次请求...' }
-    ]
+    title: '快速开始',
+    type: 'doc',
+    filePath: 'docs/start.md'
   },
   {
-    id: 'endpoints',
-    title: '接口定义',
+    id: 'plugins',
+    title: '各种插件配置',
     type: 'category',
     children: [
       {
-        id: 'chat',
-        title: '对话 (Chat)',
-        type: 'category',
-        children: [
-          { id: 'create-chat', title: '发起对话', type: 'doc', method: 'POST', filePath: 'docs/chat.md' },
-          { id: 'get-chat', title: '查询历史', type: 'doc', method: 'GET', content: '# 查询历史\n\n暂未开放' }
-        ]
+        id: 'claudeCode',
+        title: 'claudeCode配置',
+        type: 'doc',
+        filePath: 'docs/plugin/claudecode.md'
       },
       {
-        id: 'image',
-        title: '图像 (Image)',
-        type: 'category',
-        children: [
-           { id: 'gemini-vision', title: 'Gemini Vision', type: 'doc', method: 'POST', filePath: 'docs/gemini.md' },
-           { id: 'dalle', title: 'DALL·E 3', type: 'doc', method: 'POST', content: '# DALL·E 3\n\nOpenAI 绘图接口...' }
-        ]
-      }
+        id: 'codeX',
+        title: 'codeX配置',
+        type: 'doc',
+        filePath: 'docs/plugin/codex.md'
+      },
+      {
+        id: 'cursor',
+        title: 'Cursor配置',
+        type: 'doc',
+        filePath: 'docs/plugin/cursor.md'
+      },
+      {
+        id: 'n8n',
+        title: 'n8n配置',
+        type: 'doc',
+        filePath: 'docs/plugin/n8n.md'
+      },
+      {
+        id: 'geminicli',
+        title: 'gemini Cli配置',
+        type: 'doc',
+        filePath: 'docs/plugin/geminicli.md'
+      },
     ]
   },
   {
-    id: 'sdks',
-    title: 'SDK 下载',
+    id: 'question',
+    title: '常见问题',
     type: 'doc',
-    content: '# SDK 下载\n\n官方提供 Python 和 Node.js SDK。'
-  }
+    filePath: 'docs/question.md'
+  },
 ];
 
 // Helper functions
@@ -73,4 +81,16 @@ export const findPathToDoc = (items: DocItem[], targetId: string, currentPath: s
         }
     }
     return null;
+};
+
+// Find any item (doc or category) by id
+export const findItemById = (items: DocItem[], targetId: string): DocItem | null => {
+  for (const item of items) {
+    if (item.id === targetId) return item;
+    if (item.children) {
+      const found = findItemById(item.children, targetId);
+      if (found) return found;
+    }
+  }
+  return null;
 };

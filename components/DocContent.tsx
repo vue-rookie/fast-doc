@@ -4,9 +4,11 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { DocItem } from '../types';
+import { TableOfContents } from './TableOfContents';
 
 interface DocContentProps {
   doc: DocItem;
+  breadcrumbs: DocItem[];
 }
 
 // Helper for copy button
@@ -30,19 +32,77 @@ const CopyButton = ({ text }: { text: string }) => {
   );
 };
 
-// Custom styling components
-const components: any = {
-  h1: ({node, ...props}: any) => <h1 className="text-3xl font-extrabold text-gray-900 mb-8 pb-4 border-b border-gray-200 tracking-tight" {...props} />,
-  h2: ({node, ...props}: any) => <h2 className="text-2xl font-bold text-gray-800 mt-12 mb-6 tracking-tight" {...props} />,
-  h3: ({node, ...props}: any) => <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-4 tracking-tight" {...props} />,
+// Helper function to create heading IDs
+// IMPORTANT: This must match the logic in TableOfContents.tsx
+const createHeadingId = (text: string): string => {
+  return text
+    .toLowerCase()
+    // Remove all punctuation and special chars except Chinese, alphanumeric, spaces, and hyphens
+    .replace(/[^\u4e00-\u9fa5a-z0-9\s-]/g, '')
+    // Replace multiple spaces with single hyphen
+    .replace(/\s+/g, '-')
+    // Replace multiple hyphens with single hyphen
+    .replace(/-+/g, '-')
+    .trim();
+};
+
+// Helper function to extract text from React children
+const extractText = (children: any): string => {
+  if (typeof children === 'string') return children;
+  if (typeof children === 'number') return String(children);
+  if (Array.isArray(children)) return children.map(extractText).join('');
+  if (children?.props?.children) return extractText(children.props.children);
+  return '';
+};
+
+// Custom styling components - using a counter map to handle duplicate headings
+const createComponents = (headingIdMap: Map<string, string>): any => {
+  // Track how many times each heading text has been rendered
+  const renderCounters = new Map<string, number>();
+
+  const getHeadingId = (text: string): string => {
+    // Get current count for this text
+    const currentCount = renderCounters.get(text) || 0;
+    renderCounters.set(text, currentCount + 1);
+
+    // Generate ID with counter if this is a duplicate
+    const baseId = createHeadingId(text);
+    if (currentCount === 0) {
+      return baseId;
+    } else {
+      return `${baseId}-${currentCount}`;
+    }
+  };
+
+  return {
+    h1: ({node, children, ...props}: any) => {
+      const text = extractText(children);
+      const id = getHeadingId(text);
+      return <h1 id={id} className="text-3xl font-extrabold text-gray-900 mb-8 pb-4 border-b border-gray-200 tracking-tight" {...props}>{children}</h1>;
+    },
+    h2: ({node, children, ...props}: any) => {
+      const text = extractText(children);
+      const id = getHeadingId(text);
+      return <h2 id={id} className="text-2xl font-bold text-gray-800 mt-12 mb-6 tracking-tight" {...props}>{children}</h2>;
+    },
+    h3: ({node, children, ...props}: any) => {
+      const text = extractText(children);
+      const id = getHeadingId(text);
+      return <h3 id={id} className="text-xl font-semibold text-gray-800 mt-8 mb-4 tracking-tight" {...props}>{children}</h3>;
+    },
+  };
+};
+
+// Non-heading components (static) - all the components that don't need heading IDs
+const staticComponents: any = {
   h4: ({node, ...props}: any) => <h4 className="text-lg font-semibold text-gray-700 mt-6 mb-3" {...props} />,
   p: ({node, ...props}: any) => <p className="text-[15px] text-gray-600 leading-7 mb-5" {...props} />,
-  
+
   ul: ({node, ...props}: any) => <ul className="list-disc list-outside ml-5 space-y-2 mb-6 text-gray-600 leading-7" {...props} />,
   ol: ({node, ...props}: any) => <ol className="list-decimal list-outside ml-5 space-y-2 mb-6 text-gray-600 leading-7" {...props} />,
-  
+
   a: ({node, ...props}: any) => <a className="text-primary font-medium hover:underline decoration-primary/30 underline-offset-2 transition-all" target="_blank" rel="noopener noreferrer" {...props} />,
-  
+
   blockquote: ({node, ...props}: any) => (
     <div className="bg-blue-50/50 border-l-4 border-blue-500 py-3 px-4 mb-6 rounded-r-lg text-gray-700 text-sm leading-6">
       {props.children}
@@ -52,13 +112,11 @@ const components: any = {
   // Syntax Highlighting for Code Blocks
   code({node, inline, className, children, ...props}: any) {
     const match = /language-(\w+)/.exec(className || '');
-    
-    // Safely extract text from children
+
     const getText = (child: any): string => {
         if (typeof child === 'string') return child;
         if (typeof child === 'number') return String(child);
         if (Array.isArray(child)) return child.map(getText).join('');
-        // Fallback: if we somehow get an object (like a nested React element), try to ignore it or return empty
         return '';
     };
 
@@ -81,7 +139,7 @@ const components: any = {
               fontSize: '0.875rem',
               lineHeight: '1.6',
               borderRadius: '0',
-              backgroundColor: '#1e1e1e', // Match VS Code Dark
+              backgroundColor: '#1e1e1e',
             }}
             codeTagProps={{
               style: { fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace" }
@@ -92,7 +150,7 @@ const components: any = {
         </div>
       );
     }
-    
+
     return (
       <code className="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-[13px] font-mono border border-gray-200" {...props}>
         {children}
@@ -111,8 +169,8 @@ const components: any = {
   tbody: ({node, ...props}: any) => <tbody className="bg-white divide-y divide-gray-200" {...props} />,
   tr: ({node, ...props}: any) => <tr className="hover:bg-gray-50/50 transition-colors" {...props} />,
   td: ({node, ...props}: any) => <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600" {...props} />,
-  
-  // Custom API Components via HTML comments/divs
+
+  // Custom API Components
   div: ({node, className, ...props}: any) => {
     if (className === 'api-endpoint') {
         return (
@@ -130,7 +188,7 @@ const components: any = {
           if (className.includes('get')) colorClass = 'bg-green-100 text-green-700 ring-1 ring-green-600/20';
           if (className.includes('put')) colorClass = 'bg-blue-100 text-blue-700 ring-1 ring-blue-600/20';
           if (className.includes('delete')) colorClass = 'bg-red-100 text-red-700 ring-1 ring-red-600/20';
-          
+
           return <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase ${colorClass} shrink-0`} {...props} />
       }
       if (className === 'url') {
@@ -140,10 +198,45 @@ const components: any = {
   }
 };
 
-export const DocContent: React.FC<DocContentProps> = ({ doc }) => {
+export const DocContent: React.FC<DocContentProps> = ({ doc, breadcrumbs }) => {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [headingIdMap, setHeadingIdMap] = useState<Map<string, string>>(new Map());
+
+  // Generate unique heading IDs from content and create a map
+  useEffect(() => {
+    if (!content) return;
+
+    const headingRegex = /^(#{1,3})\s+(.+)$/gm;
+    const idMap = new Map<string, string>();
+    const idCounts: Record<string, number> = {};
+    let match;
+
+    while ((match = headingRegex.exec(content)) !== null) {
+      const text = match[2].trim();
+      let baseId = text
+        .toLowerCase()
+        .replace(/[^\u4e00-\u9fa5a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+
+      // Ensure unique IDs by adding counter if duplicate
+      let uniqueId = baseId;
+      if (idCounts[baseId] !== undefined) {
+        idCounts[baseId]++;
+        uniqueId = `${baseId}-${idCounts[baseId]}`;
+      } else {
+        idCounts[baseId] = 0;
+      }
+
+      // Map original text to the generated ID
+      idMap.set(text, uniqueId);
+    }
+
+    setHeadingIdMap(idMap);
+  }, [content]);
 
   // Effect to load content when doc changes
   useEffect(() => {
@@ -178,14 +271,24 @@ export const DocContent: React.FC<DocContentProps> = ({ doc }) => {
   if (!doc) return <div className="p-10 text-center text-gray-400">Select a document to view</div>;
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10 lg:px-12 lg:py-14 animate-fade-in min-h-[50vh]">
-        {/* Header Metadata */}
+    <div className="flex gap-8 max-w-7xl mx-auto px-6 py-10 lg:px-12 lg:py-14">
+      {/* Main Content */}
+      <div className="flex-1 min-w-0 animate-fade-in">
+        {/* Breadcrumb Navigation */}
         <div className="flex items-center space-x-2 text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
-            <span>Docs</span>
-            <i className="fas fa-chevron-right text-[10px]"></i>
-            <span className={doc.type === 'category' ? 'text-primary' : ''}>
-                {doc.type === 'doc' ? 'API Reference' : 'Category'}
-            </span>
+            <span>文档</span>
+            {breadcrumbs.length > 0 && (
+              <>
+                {breadcrumbs.map((item, index) => (
+                  <React.Fragment key={item.id}>
+                    <i className="fas fa-chevron-right text-[10px]"></i>
+                    <span className={index === breadcrumbs.length - 1 ? 'text-primary' : ''}>
+                      {item.title}
+                    </span>
+                  </React.Fragment>
+                ))}
+              </>
+            )}
         </div>
 
         {/* Loading State */}
@@ -200,18 +303,18 @@ export const DocContent: React.FC<DocContentProps> = ({ doc }) => {
             </div>
         ) : (
              /* Content */
-            <div className="api-doc-content">
-              <ReactMarkdown 
+            <div className="api-doc-content" key={doc.id}>
+              <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
-                  components={components}
+                  components={{...staticComponents, ...createComponents(headingIdMap)}}
               >
                   {content}
               </ReactMarkdown>
             </div>
         )}
-        
+
         {/* Simple Footer */}
-        {!loading && !error && (
+        {/* {!loading && !error && (
             <div className="mt-24 mb-10 pt-8 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center text-sm text-gray-400 gap-4">
             <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-400"></div>
@@ -219,7 +322,11 @@ export const DocContent: React.FC<DocContentProps> = ({ doc }) => {
             </div>
             <span className="text-gray-300">Powered by Your Brand</span>
             </div>
-        )}
+        )} */}
+      </div>
+
+      {/* Table of Contents */}
+      {/* {!loading && !error && <TableOfContents content={content} />} */}
     </div>
   );
 };

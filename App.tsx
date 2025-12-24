@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Route, Routes, useParams, useNavigate, Navigate } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { DocContent } from './components/DocContent';
-import { docsData, flattenDocs } from './data/docs';
+import { docsData, flattenDocs, findItemById, findPathToDoc } from './data/docs';
+import { DocItem } from './types';
 
 // Wrapper to handle params logic
 const DocWrapper = ({ 
@@ -16,6 +17,15 @@ const DocWrapper = ({
   const navigate = useNavigate();
   const flatDocs = flattenDocs(docsData);
   const currentDoc = docId ? flatDocs[docId] : flatDocs['intro'];
+
+  // Get current item (doc or category) for display title
+  const currentItem = docId ? findItemById(docsData, docId) : findItemById(docsData, 'intro');
+
+  // Get breadcrumb path
+  const breadcrumbPath = docId ? findPathToDoc(docsData, docId) : findPathToDoc(docsData, 'intro');
+  const breadcrumbs: DocItem[] = breadcrumbPath
+    ? breadcrumbPath.map(id => findItemById(docsData, id)).filter(Boolean) as DocItem[]
+    : [];
 
   // Scroll to top on doc change
   useEffect(() => {
@@ -42,12 +52,12 @@ const DocWrapper = ({
                 <i className="fas fa-bars"></i>
             </button>
             <span className="ml-3 font-semibold text-gray-700 truncate">
-                {currentDoc?.title || 'API Docs'}
+                {currentItem?.title || 'API 文档'}
             </span>
         </div>
 
         {currentDoc ? (
-            <DocContent doc={currentDoc} />
+            <DocContent doc={currentDoc} breadcrumbs={breadcrumbs} />
         ) : (
              <div className="flex flex-col items-center justify-center h-full text-gray-400">
                 <i className="fas fa-file-circle-xmark text-4xl mb-4"></i>

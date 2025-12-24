@@ -4,7 +4,7 @@
 
 <div class="api-endpoint">
   <span class="badge post">POST</span>
-  <span class="url">https://api.yunwu.ai/v1/chat/completions</span>
+  <span class="url">https://api.timebackward.com/v1/chat/completions</span>
 </div>
 
 ### 请求参数 (Body)

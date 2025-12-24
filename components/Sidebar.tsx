@@ -170,7 +170,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, activeId, onNavigate, i
                 <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center text-white text-xs font-bold mr-2">
                     D
                 </div>
-                <span className="font-bold text-gray-800 text-lg tracking-tight">Docs Portal</span>
+                <span className="font-bold text-gray-800 text-lg tracking-tight">FastCode文档说明</span>
             </div>
 
             {/* Search Header */}
@@ -179,7 +179,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, activeId, onNavigate, i
                     <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs group-focus-within:text-primary transition-colors"></i>
                     <input
                         type="text"
-                        placeholder="Search documentation..."
+                        placeholder="输入搜索内容进行搜索..."
                         className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm placeholder-gray-400"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
@@ -189,9 +189,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, activeId, onNavigate, i
 
             {/* Menu List */}
             <div className="overflow-y-auto h-[calc(100vh-140px)] pb-10 custom-scrollbar px-0">
-                <div className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2">
+                {/* <div className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2">
                     Navigation
-                </div>
+                </div> */}
                 {items.map(item => (
                     matchesSearch(item) ? (
                         <MenuItem
