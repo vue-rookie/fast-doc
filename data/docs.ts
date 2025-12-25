@@ -8,7 +8,7 @@ export const docsData: DocItem[] = [
     filePath: 'docs/intro.md'
   },
   {
-    id: 'basics',
+    id: 'start',
     title: '快速开始',
     type: 'doc',
     filePath: 'docs/start.md'
