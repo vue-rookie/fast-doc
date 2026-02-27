@@ -48,6 +48,43 @@ export const docsData: DocItem[] = [
         type: 'doc',
         filePath: 'docs/plugin/geminicli.md'
       },
+      {
+        id: 'cherrystudio',
+        title: 'cherrystudio中配置claude MCP',
+        type: 'doc',
+        filePath: 'docs/plugin/cherrystudio.md'
+      },
+      {
+        id: 'cherrystudios',
+        title: 'cherrystudio配置',
+        type: 'doc',
+        filePath: 'docs/plugin/cherrystudios.md'
+      }
+    ]
+  },
+  {
+    id: 'api',
+    title: 'AI应用产品调用',
+    type: 'category',
+    children: [
+      {
+        id: 'gemini',
+        title: 'gemini调用',
+        type: 'doc',
+        filePath: 'docs/api/gemini.md'
+      },
+      {
+        id: 'claude',
+        title: 'claude调用',
+        type: 'doc',
+        filePath: 'docs/api/claude.md'
+      },
+      {
+        id: 'gpt',
+        title: 'chatGpt调用',
+        type: 'doc',
+        filePath: 'docs/api/gpt.md'
+      }
     ]
   },
   {
